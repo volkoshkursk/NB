@@ -1,4 +1,5 @@
 from base import *
+import progressbar
 import operator
 
 
@@ -29,6 +30,9 @@ def train(C, D, D_c):
     condprob = dict()
     array = (c_char_p * len(D_c[1]))()
     array[:] = [s.encode() for s in D_c[1]]
+    widgets = [progressbar.Percentage(), progressbar.Bar()]
+    bar = progressbar.ProgressBar(widgets=widgets, max_value=len(C.keys())).start()
+    i_bar = 0
     for i in C.keys():
         prior.update(
             dict.fromkeys([i], mi.count(array, len(D_c[1]), create_string_buffer(str.encode('|' + i + '|'))) / N))
@@ -54,6 +58,9 @@ def train(C, D, D_c):
         condprob.update(dict.fromkeys([i], dict(dict.fromkeys([j], ((temp[j] + 1) / all_)))))
         for x in (V - set([j])):
             condprob[i].update(dict.fromkeys([x], ((temp[x] + 1) / all_)))
+        bar.update(i_bar)
+        i_bar += 1
+    bar.finish()
     return prior, condprob
 
 
@@ -61,7 +68,8 @@ def use(C, prior, condprob, d):
     body = list()
     if d.body != None:
         body = d.body.lower().translate(str.maketrans(',:"0123456789.()', '                ',
-                                                      "';\/<>-")).split()  # получить тела, сделать все буквы строчными, заменить лишние символы пробелами и разделить на слова (по стандартному алгоритму)
+                                                      "';\/<>-")).split()   # получить тела, сделать
+# все буквы строчными, заменить лишние символы пробелами и разделить на слова (по стандартному алгоритму)
     title = list()
     if d.title != None:
         title = d.title.lower().translate(str.maketrans(',:"0123456789.()', '                ', "';\/<>-")).split()
@@ -99,8 +107,10 @@ def main_nb():
     cursor.execute("select * from inp where inp." + groupname[num] + "!= 'None' ")
     #	D = cursor.fetchall()
     (D, D_c) = decode_from_db(cursor.fetchall(), cat, num)
+    print('train model')
     (prior, condprob) = train(C, D, D_c)
     cursor.execute("select * from test")
+    print('model is trained')
     D_test = decode_from_db(cursor.fetchall(), cat)
     score_test = 0
     all_cats = dict.fromkeys(cat[num], 0)
@@ -116,6 +126,7 @@ def main_nb():
         if all_cats[i] == 0:
             all_cats.pop(i)
     #	print([score_test/(len(D_test) - 1), list(map(lambda x: score2[x]/all_cats[x], all_cats.keys()))])
+    print('score: ', end=' ')
     print(score_test / (len(D_test) - 1))
     for i in all_cats.keys():
         print(i, end=' ')
