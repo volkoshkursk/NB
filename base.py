@@ -88,21 +88,21 @@ class news:
             self.text_type = type_
 
     def set_text_waste(self, waste):
-        if len(waste) > 0 and self.text_waste == None:
+        if len(waste) > 0 and self.text_waste is None:
             self.text_waste = waste
-        elif len(waste) > 0 and self.text_waste != None:
+        elif len(waste) > 0 and self.text_waste is not None:
             self.text_waste += waste
 
     def set_body(self, body):
-        if len(body) > 0 and self.body == None:
+        if len(body) > 0 and self.body is None:
             self.body = body
-        elif len(body) > 0 and self.body != None:
+        elif len(body) > 0 and self.body is not None:
             self.body += body
 
     def set_title(self, title):
-        if len(title) > 0 and self.title == None:
+        if len(title) > 0 and self.title is None:
             self.title = title
-        elif len(title) > 0 and self.title != None:
+        elif len(title) > 0 and self.title is not None:
             self.title += title
 
     def set_author(self, author):
@@ -122,38 +122,38 @@ class news:
         print('TOPICS: ' + str(self.topics))
         print('topics array: ' + str(self.topics_array))
         print('date: ' + str(self.date))
-        if (self.mknote != None):
+        if self.mknote is not None:
             print('mknote: ' + str(self.mknote))
         print('places: ' + str(self.places))
-        if (self.people != None):
+        if self.people is not None:
             print('people: ' + str(self.people))
-        if (self.orgs != None):
+        if self.orgs is not None:
             print('orgs: ' + str(self.orgs))
-        if (self.exchanges != None):
+        if self.exchanges is not None:
             print('exchanges: ' + str(self.exchanges))
-        if (self.companies != None):
+        if self.companies is not None:
             print('companies: ' + str(self.companies))
-        if (self.unknown != None):
+        if self.unknown is not None:
             print('unknown: ' + str(self.unknown))
         print('text_type: ' + str(self.text_type))
-        if (self.text_waste != None):
+        if self.text_waste is not None:
             print('text waste: ' + str(self.text_waste))
-        if (self.author != None):
+        if self.author is not None:
             print('author: ' + str(self.author))
-        if (self.dateline != None):
+        if self.dateline is not None:
             print('dateline: ' + str(self.dateline))
-        if (self.title != None):
+        if self.title is not None:
             print('title: ' + str(self.title))
         print(self.body)
 
     def encode_arr(self, inp):
-        if inp == None:
+        if inp is None:
             return 'None'
         else:
             return str('|'.join(inp))
 
     def encode(self, inp):
-        if inp == None:
+        if inp is None:
             return 'None'
         else:
             return str('"/"'.join(inp.split("'")))
@@ -194,7 +194,7 @@ def get_collection_categories(adress):
     for i in range(len(filenames)):
         f = open(filenames[i], encoding='cp1252')
         out.append(set(map(lambda line: ''.join(''.join(line.split('\n')).split(' ')), f)))
-        #		print(f.split('\n'))
+        # 		print(f.split('\n'))
         f.close()
     return out
 
@@ -214,7 +214,7 @@ def loading_text(line, l, body_act, text_act, title_act, obj):  # предпол
         if line[len(line) - 9:len(line) - 1] != '</TITLE>' and not title_act:
             l = skip_unlim(k, line, '<AUTHOR>', '<DATELINE>', '<BODY>', '\n')
             (body_act, text_act, title_act, obj, l) = loading_text(line, l, body_act, text_act, title_act, obj)
-    #		elif title_act:
+    # 		elif title_act:
 
     elif line[l:l + 8] == '<AUTHOR>':
         k = skip(l + 10, line, '</AUTHOR>')
@@ -229,15 +229,15 @@ def loading_text(line, l, body_act, text_act, title_act, obj):  # предпол
             l = skip_unlim(k, line, '<TITLE>', '<AUTHOR>', '<BODY>', '\n')
             (body_act, text_act, title_act, obj, l) = loading_text(line, l, body_act, text_act, title_act, obj)
     else:
-        #		obj.set_text_waste(line)
+        # 		obj.set_text_waste(line)
         obj.set_text_waste('\n')
         text_act = True
-    return (body_act, text_act, title_act, obj, l)
+    return body_act, text_act, title_act, obj, l
 
 
 def open_sgm(filename, array_cat, database=None):  # чтение *.sgm файлов
     f = open(filename, encoding='cp1252')
-    if not (database == None):
+    if not (database is None):
         try:
             conn = sqlite3.connect(database)
             cursor = conn.cursor()
@@ -253,13 +253,13 @@ def open_sgm(filename, array_cat, database=None):  # чтение *.sgm файл
     text_act = False
     first = True  # если это первая строка файла...
     for line in f:
-        #		print(line[0:7])
+        # 		print(line[0:7])
         if first:
             first = False
             if line != '<!DOCTYPE lewis SYSTEM "lewis.dtd">\n':  # ... то проверить на SGML формат
                 raise NoSGM
         # первая строка заголовка новости
-        elif line[0:8] == '<REUTERS' and not (unknown_act) and not (body_act) and not text_act:  # смещение для 1го - 17
+        elif line[0:8] == '<REUTERS' and not unknown_act and not body_act and not text_act:  # смещение для 1го - 17
             if line[17] == 'Y':  # TOPICS = YES
                 k1 = skip(skip(20, line, 'LEWISSPLIT') + 10, line, '"')
                 k2 = skip(skip(k1, line, 'CGISPLIT') + 8, line, '"')
@@ -305,33 +305,35 @@ def open_sgm(filename, array_cat, database=None):  # чтение *.sgm файл
                 k4 = skip(skip(k3, line, 'NEWID') + 5, line, '"')
                 out.append(news('BYPASS', line[k1 + 1: skip(k1 + 1, line, '"')], line[k2 + 1: skip(k2 + 1, line, '"')],
                                 line[k3 + 1: skip(k3 + 1, line, '"')], line[k4 + 1: skip(k4 + 1, line, '"')], csecs))
-        elif line[0:6] == '<DATE>' and not (unknown_act) and not (body_act) and not text_act:
-            #			out[len(out) - 1].set_date(line[7:skip(7,line,'</DATE>')])
+        elif line[0:6] == '<DATE>' and not unknown_act and not body_act and not text_act:
+            # 			out[len(out) - 1].set_date(line[7:skip(7,line,'</DATE>')])
             out[len(out) - 1].set_date(line[6:len(line) - 8])
-        elif line[0:8] == '<TOPICS>' and not (unknown_act) and not (
-        body_act) and not text_act:  # в описании сказано, что  TOPICS не сообщает ничего о наличии категорий заголовков, поэтому читаем для всех
-            #			print(''.join((line[11:len(line) - 14]).split('<D>'))) # удаление <D>...
+        elif line[0:8] == '<TOPICS>' and not unknown_act and not (
+                body_act) and not text_act:  # в описании сказано, что  TOPICS не сообщает ничего о наличии категорий
+            #  заголовков, поэтому читаем для всех
+            # 			print(''.join((line[11:len(line) - 14]).split('<D>'))) # удаление <D>...
             out[len(out) - 1].set_topics((''.join((line[11:len(line) - 14]).split('<D>'))).split('</D>'),
                                          array_cat[4])  # ... и разбиение по </D>, а затем запись в объект
-        elif line[0:8] == '<MKNOTE>' and not (unknown_act) and not (body_act) and not text_act:
+        elif line[0:8] == '<MKNOTE>' and not unknown_act and not body_act and not text_act:
             out[len(out) - 1].set_mknote(line[9:skip(7, line, '</MKNOTE>')])
-        elif line[0:8] == '<PLACES>' and not (unknown_act) and not (body_act) and not text_act:
+        elif line[0:8] == '<PLACES>' and not unknown_act and not body_act and not text_act:
             out[len(out) - 1].set_places((''.join((line[11:len(line) - 14]).split('<D>'))).split('</D>'),
                                          array_cat[3])  # аналогично <TOPICS>
-        elif line[0:8] == '<PEOPLE>' and not (unknown_act) and not (body_act) and not text_act:
+        elif line[0:8] == '<PEOPLE>' and not unknown_act and not body_act and not text_act:
             out[len(out) - 1].set_people((''.join((line[11:len(line) - 14]).split('<D>'))).split('</D>'),
                                          array_cat[2])  # аналогично <TOPICS>
-        elif line[0:6] == '<ORGS>' and not (unknown_act) and not (body_act) and not text_act:
+        elif line[0:6] == '<ORGS>' and not unknown_act and not body_act and not text_act:
             out[len(out) - 1].set_orgs((''.join((line[9:len(line) - 12]).split('<D>'))).split('</D>'),
                                        array_cat[1])  # аналогично <TOPICS>
-        elif line[0:11] == '<EXCHANGES>' and not (unknown_act) and not (body_act) and not text_act:
+        elif line[0:11] == '<EXCHANGES>' and not unknown_act and not body_act and not text_act:
             out[len(out) - 1].set_exchanges((''.join((line[14:len(line) - 17]).split('<D>'))).split('</D>'),
                                             array_cat[0])  # аналогично <TOPICS>
-        elif line[0:11] == '<COMPANIES>' and not (unknown_act) and not (
-        body_act) and not text_act:  # хотя это излишне: в коллекции нет элементов с информацией под этим тэгом (из описания)
+        elif line[0:11] == '<COMPANIES>' and not unknown_act and not (
+                body_act) and not text_act:  # хотя это излишне: в коллекции нет элементов с информацией под этим
+            # тэгом (из описания)
             out[len(out) - 1].set_companies(line[12:len(line) - 12])
-        elif line[0:9] == '<UNKNOWN>' and not (unknown_act) and not (body_act) and not text_act and not title_act:
-            #			out[len(out) - 1].set_unknown(line[10:len(line) - 10])
+        elif line[0:9] == '<UNKNOWN>' and not unknown_act and not body_act and not text_act and not title_act:
+            #      			out[len(out) - 1].set_unknown(line[10:len(line) - 10])
 
             if len(line) > 10 and line[len(line) - 11: len(line) - 1] == '</UNKNOWN>':
                 unknown = line[10:len(line) - 11]
@@ -340,7 +342,7 @@ def open_sgm(filename, array_cat, database=None):  # чтение *.sgm файл
                 unknown = line[10:len(line) - 1] + '\n'
             else:
                 unknown_act = True
-        elif (unknown_act) and not (body_act) and not text_act:
+        elif unknown_act and not body_act and not text_act:
             if len(line) > 10 and line[len(line) - 11: len(line) - 1] == '</UNKNOWN>':
                 unknown += line[0:len(line) - 11]
                 out[len(out) - 1].set_unknown(unknown)
@@ -348,10 +350,10 @@ def open_sgm(filename, array_cat, database=None):  # чтение *.sgm файл
                 unknown_act = False
             else:
                 unknown += line[0:len(line) - 1] + '\n'
-        elif line[0:5] == '<TEXT' and not (unknown_act) and not (body_act) and not text_act and not title_act:
+        elif line[0:5] == '<TEXT' and not unknown_act and not body_act and not text_act and not title_act:
             if line[5] != '>':
                 k = skip(5, line, '"')
-                #				k = skip_unlim(6, line, '<AUTHOR>', '<DATELINE>', '<TITLE>', '<BODY>')
+                # 				k = skip_unlim(6, line, '<AUTHOR>', '<DATELINE>', '<TITLE>', '<BODY>')
                 out[len(out) - 1].set_text_type(line[k + 1:skip(k + 1, line, '"')])
                 k = skip(k, line, '>')
             else:
@@ -362,7 +364,8 @@ def open_sgm(filename, array_cat, database=None):  # чтение *.sgm файл
                                                                                  out[len(out) - 1])
         # and not(unknown_act) and not(body_act) and not text_act and not title_act
         elif line[0:10] == '</REUTERS>':
-            if database != None:
+            if database is not None:
+                command = ''
                 try:
                     command = "INSERT into inp values (" + out[len(out) - 1].generate_string() + ") "
                     cursor.execute(command)
@@ -379,13 +382,13 @@ def open_sgm(filename, array_cat, database=None):  # чтение *.sgm файл
             title_act = False
             text_act = False
             continue  # если убрать - метка конца вместе с последующей информацией заносится в waste
-        elif text_act and not (unknown_act) and not (body_act) and not title_act:
+        elif text_act and not unknown_act and not body_act and not title_act:
             l = skip_unlim(0, line, '<AUTHOR>', '<DATELINE>', '<TITLE>', '<BODY>', '\n')
             out[len(out) - 1].set_text_waste(line[0:l])
             text_act = False
             (body_act, text_act, title_act, out[len(out) - 1], l) = loading_text(line, l, body_act, text_act, title_act,
                                                                                  out[len(out) - 1])
-        elif title_act and not (unknown_act) and not (body_act) and not text_act:
+        elif title_act and not unknown_act and not body_act and not text_act:
             k = skip(0, line, '</TITLE>', '\n')
             if line[k] == '\n':
                 out[len(out) - 1].set_title(line)
@@ -406,7 +409,7 @@ def open_sgm(filename, array_cat, database=None):  # чтение *.sgm файл
         else:
             (body_act, text_act, title_act, out[len(out) - 1], l) = loading_text(line, l, body_act, text_act, title_act,
                                                                                  out[len(out) - 1])
-    #		out.append(line[0:len(line)-1]) # удаление символа сброса строки
+    #   		out.append(line[0:len(line)-1]) # удаление символа сброса строки
     f.close()
     conn.close()
     return out
@@ -414,9 +417,7 @@ def open_sgm(filename, array_cat, database=None):  # чтение *.sgm файл
 
 def decode_from_db(arr, array_cat, cat_num=None):
     arr_news = []
-    arr_for_c = []
-    arr_for_c.append(list())
-    arr_for_c.append(list())
+    arr_for_c = [list(), list()]
     for i in arr:
         arr_news.append(news(i[5], i[2], i[3], i[0], i[1], i[4]))
         arr_news[len(arr_news) - 1].set_date(i[6])
@@ -435,12 +436,12 @@ def decode_from_db(arr, array_cat, cat_num=None):
         arr_news[len(arr_news) - 1].set_text_waste(decode(i[19]))
         arr_news[len(arr_news) - 1].set_body(decode(i[20]))
 
-        if cat_num != None:
-            if arr_news[len(arr_news) - 1].title != None and arr_news[len(arr_news) - 1].body != None:
+        if cat_num is not None:
+            if arr_news[len(arr_news) - 1].title is not None and arr_news[len(arr_news) - 1].body is not None:
                 arr_for_c[0].append(arr_news[len(arr_news) - 1].title + arr_news[len(arr_news) - 1].body)
-            elif arr_news[len(arr_news) - 1].title != None:
+            elif arr_news[len(arr_news) - 1].title is not None:
                 arr_for_c[0].append(arr_news[len(arr_news) - 1].title)
-            elif arr_news[len(arr_news) - 1].body != None:
+            elif arr_news[len(arr_news) - 1].body is not None:
                 arr_for_c[0].append(arr_news[len(arr_news) - 1].body)
             else:
                 arr_for_c[0].append('')
@@ -457,10 +458,10 @@ def decode_from_db(arr, array_cat, cat_num=None):
                 arr_for_c[1].append('|' + i[7] + '|')
             else:
                 arr_for_c[1].append('')
-    if cat_num == None:
+    if cat_num is None:
         return arr_news
     else:
-        return (arr_news, arr_for_c)
+        return arr_news, arr_for_c
 
 
 def main():
@@ -470,23 +471,25 @@ def main():
                       'collection.db')
 
     for i in range(10, 22):
-        #		print(i)
+        # 		print(i)
         a += open_sgm('reuters21578.tar/reut2-0' + str(i) + '.sgm', get_collection_categories('reuters21578.tar'),
                       'collection.db')
-    #	a = open_sgm('reuters21578.tar/reut2-000.sgm', get_collection_categories('reuters21578.tar'), 'collection.db')
-    #	for i in a:
-    #		i.show()
+    # 	a = open_sgm('reuters21578.tar/reut2-000.sgm', get_collection_categories('reuters21578.tar'), 'collection.db')
+    # 	for i in a:
+    # 		i.show()
     # ==============================================
     # создание словаря и поиск самого часто встречающегося слова
     body_dict = dict()
     for text in a:
-        if text.body != None:
+        body = ''
+        if text.body is not None:
             body = text.body.lower().translate(str.maketrans(',:"',
-                                                             '   ')).split()  # получить тела, сделать все буквы строчными, заменить лишние символы пробелами и разделить на слова (по стандартному алгоритму)
-        if text.title != None:
+                                                             '   ')).split()  # получить тела, сделать все буквы
+            # строчными, заменить лишние символы пробелами и разделить на слова (по стандартному алгоритму)
+        if text.title is not None:
             body += text.title.lower().translate(str.maketrans(',:"', '   ')).split()
         for i in body:
-            if body_dict.get(i) == None:
+            if body_dict.get(i) is None:
                 body_dict[i] = 1
             else:
                 body_dict[i] += 1
@@ -497,18 +500,18 @@ def main():
 
 # ===============================================
 # for i in body_dict.keys():
-#	print(i)
+# 	print(i)
 # print('====================')
 # for i in range(len(a)):
-#	if a[i].newid != i + 1:
-#		print('====================')
-#		print(i)
-#		a[i].show()
+# 	if a[i].newid != i + 1:
+# 		print('====================')
+# 		print(i)
+# 		a[i].show()
 # print('====================')
 
 # for i in a:
-#	if i.text_type != 'NORM': 
-#		i.show()
+# 	if i.text_type != 'NORM':
+# 		i.show()
 # open_sgm('reuters21578.tar/lewis.dtd')
 if __name__ == '__main__':
     main()

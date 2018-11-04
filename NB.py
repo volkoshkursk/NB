@@ -23,7 +23,7 @@ def test_NB(C, D, D_c):
 def train(C, D, D_c):
     libname = os.path.abspath(os.path.join(os.path.dirname(__file__), "libmi.so"))
     mi = CDLL(libname)
-    V = set()
+    V = set()  # словарь
     [V.update(set(x)) for x in C.values()]
     N = len(D)
     prior = dict()
@@ -36,6 +36,7 @@ def train(C, D, D_c):
     for i in C.keys():
         prior.update(
             dict.fromkeys([i], mi.count(array, len(D_c[1]), create_string_buffer(str.encode('|' + i + '|'))) / N))
+# вероятность темы i в коллекции
         #		text = C[i]
         mi.count_arr.restype = py_object
         # ----------------------------------------
@@ -43,6 +44,7 @@ def train(C, D, D_c):
         text += ' '.join([D_c[0][s] for s in
                           mi.count_arr(array, len(D_c[1]), create_string_buffer(str.encode('|' + i + '|')))]).lower()
         text = text.split(' ')
+# в text собираются тела/заголовки документов, отмеченных темой i
         # ----------------------------------------
         #		text = [x for x in (C[i] & set([]))]
         if len(text) == 0:
@@ -52,12 +54,14 @@ def train(C, D, D_c):
         temp = dict.fromkeys(V)
         for j in V:
             temp[j] = mi.count(array1, len(text), create_string_buffer(str.encode(j)))
+# считаем сколько раз каждое слово из словаря встретилось во всех документах, помеченных темой i
         all_ = len(text) + len(V)
         #		all_ = sum(list(temp.values()))
         #		all_ += len(text)
         condprob.update(dict.fromkeys([i], dict(dict.fromkeys([j], ((temp[j] + 1) / all_)))))
         for x in (V - set([j])):
             condprob[i].update(dict.fromkeys([x], ((temp[x] + 1) / all_)))
+# вероятность каждого слова в каждой теме
         bar.update(i_bar)
         i_bar += 1
     bar.finish()
