@@ -513,5 +513,7 @@ def main():
 # 	if i.text_type != 'NORM':
 # 		i.show()
 # open_sgm('reuters21578.tar/lewis.dtd')
+
+
 if __name__ == '__main__':
     main()

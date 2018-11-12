@@ -8,12 +8,12 @@ def test_NB(C, D, D_c):
     mi = CDLL(libname)
     V = set()
     [V.update(set(x)) for x in C.values()]
-    #	V.union(vt)
+    # 	V.union(vt)
 #    N = len(D)
 #    prior = dict()
 #    condprob = dict()
-    #	for i in C.keys():
-    #	arr = C.keys()
+    # 	for i in C.keys():
+    # 	arr = C.keys()
     i = 'cme'
     array = (c_char_p * len(D_c[1]))()
     array[:] = [s.encode() for s in D_c[1]]
@@ -37,7 +37,7 @@ def train(C, D, D_c):
         prior.update(
             dict.fromkeys([i], mi.count(array, len(D_c[1]), create_string_buffer(str.encode('|' + i + '|'))) / N))
 # вероятность темы i в коллекции
-        #		text = C[i]
+        # 		text = C[i]
         mi.count_arr.restype = py_object
         # ----------------------------------------
         text = ''
@@ -46,7 +46,7 @@ def train(C, D, D_c):
         text = text.split(' ')
 # в text собираются тела/заголовки документов, отмеченных темой i
         # ----------------------------------------
-        #		text = [x for x in (C[i] & set([]))]
+        # 		text = [x for x in (C[i] & set([]))]
         if len(text) == 0:
             continue
         array1 = (c_char_p * len(text))()
@@ -56,8 +56,8 @@ def train(C, D, D_c):
             temp[j] = mi.count(array1, len(text), create_string_buffer(str.encode(j)))
 # считаем сколько раз каждое слово из словаря встретилось во всех документах, помеченных темой i
         all_ = len(text) + len(V)
-        #		all_ = sum(list(temp.values()))
-        #		all_ += len(text)
+        # 		all_ = sum(list(temp.values()))
+        # 		all_ += len(text)
         condprob.update(dict.fromkeys([i], dict(dict.fromkeys([j], ((temp[j] + 1) / all_)))))
         for x in (V - set([j])):
             condprob[i].update(dict.fromkeys([x], ((temp[x] + 1) / all_)))
@@ -81,17 +81,17 @@ def use(C, prior, condprob, d):
     V = set()
     [V.update(set(x)) for x in C.values()]
     w = list()
-    #	w.update(set(body) & V)
+    # 	w.update(set(body) & V)
     for i in body:
         if i in V:
             w.append(i)
     score = dict()
     for i in C.keys():
         if prior[i] > 0:
-            #			score.update(i=math.log(prior[i]))
+            # 			score.update(i=math.log(prior[i]))
             score.update(dict.fromkeys([i], (math.log(prior[i]))))
             for j in w:
-                #				print(condprob[i][j])
+                # 				print(condprob[i][j])
                 score[i] += math.log(condprob[i][j])
     return max(score.items(), key=operator.itemgetter(1))[0]
 
