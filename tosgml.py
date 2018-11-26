@@ -14,8 +14,10 @@ def open_exam(filename, test=True):
         return themes, corpora
     else:
         corpora = []
+        i = 0
         for line in f:
             corpora.append(line)
+            i += 1
         f.close()
         return corpora
 
@@ -31,9 +33,9 @@ def encrypt(data, num, cat=None, train=True):
                                                                                        '<ORGS></ORGS>\n' \
                                                                                        '<EXCHANGES></EXCHANGES>\n' \
                                                                                        '<COMPANIES></COMPANIES>\n' \
-                                                                                       '<UNKNOWN></UNKNOWN>\n' \
-                                                                                       '<TEXT><TITLE></TITLE>' \
-                                                                                       '<DATELINE></DATELINE><BODY>' + \
+                                                                                       '<UNKNOWN> </UNKNOWN>\n' \
+                                                                                       '<TEXT>' \
+                                                                                       '<DATELINE>  </DATELINE>  <BODY>' + \
                    data[i] + '</BODY></TEXT>\n</REUTERS>\n'
         return out
 
