@@ -1,21 +1,10 @@
 from base import *
 import progressbar
+import pymorphy2
 from multiprocessing.dummy import Process
 
+text_utils = {'PREP', 'CONJ', 'INTJ', 'PRED', 'PRCL', 'NPRO'}
 
-# def create(classname, arr, cursor, conn, groupname):
-# 	if len(arr) == 0:
-# 		return
-# 	for i in arr:
-# 		command = "INSERT into" + groupname + "values ("+ "'" + classname +"','" + i[0] + "','" + str(i[1]) + "'); \n"
-# 		try:
-# 			cursor.execute(command)
-# 		except sqlite3.DatabaseError as e:
-# 			print(e)
-# 			print(command)
-# 			print('===============================\n==============================')
-# 		else:
-# 			conn.commit()
 
 def create(classname, arr, cursor, conn, groupname):
     if len(arr) == 0:
@@ -32,6 +21,28 @@ def create(classname, arr, cursor, conn, groupname):
         print('===============================\n==============================')
     else:
         conn.commit()
+
+
+def dictionary(i, words, morph, collocations):
+    body = list()
+    if i.body is not None:
+        for w in i.body.lower().translate(str.maketrans(',:".();\/<>-«»', '            ',
+                                                        "0123456789'")).split():  # получить тела, сделать все буквы
+            # строчными, заменить лишние символы пробелами и разделить на слова (по стандартному алгоритму)
+            w = morph.parse(w)[0]
+            if w.tag.POS not in text_utils:
+                body.append(w)
+        for j in range(len(body) - 1):
+            collocations.add(body[j] + ' ' + body[j + 1])
+    if i.title is not None:
+        for w in i.title.lower().translate(str.maketrans(',:".();\/<>-«»', '            ',
+                                                         "0123456789'")).split():
+            w = morph.parse(w)[0]
+            if w.tag.POS not in text_utils:
+                body.append(w)
+        for j in range(len(body) - 1):
+            collocations.add(body[j] + ' ' + body[j + 1])
+    words.update(set(body))
 
 
 def mi_run(widgets, words, mi, array, i, arr, array1, groupname, cursor, conn, all_):
@@ -59,6 +70,7 @@ def mi_run(widgets, words, mi, array, i, arr, array1, groupname, cursor, conn, a
 def main_mi(num):
     libname = os.path.abspath(os.path.join(os.path.dirname(__file__), "libmi.so"))
     mi = CDLL(libname)
+    morph = pymorphy2.MorphAnalyzer()
     conn = sqlite3.connect('news_collection_.db')
     groupname = ['exchanges', 'orgs', 'people', 'places', 'topics_array']
 
@@ -78,21 +90,14 @@ def main_mi(num):
     collocations = set()
     # в этом цикле получаем словарь на нашей выборке и набор словосочетаний
     print('getting words')
+    procs = []
     for i in all_arr:
-        body = list()
-        if i.body is not None:
-            body = i.body.lower().translate(str.maketrans(',:".();\/<>-«»', '                ',
-                                                          "0123456789'")).split()  # получить тела, сделать все буквы
-            # строчными, заменить лишние символы пробелами и разделить на слова (по стандартному алгоритму)
-        for j in range(len(body) - 1):
-            collocations.add(body[j] + ' ' + body[j + 1])
-        title = list()
-        if i.title is not None:
-            title = i.title.lower().translate(str.maketrans(',:".();\/<>-«»', '                ', "0123456789'")).split()
-        for j in range(len(title) - 1):
-            collocations.add(title[j] + ' ' + title[j + 1])
-        body += title
-        words.update(set(body))
+        proc = Process(target=dictionary, args=(i, words, morph, collocations,))
+        procs.append(proc)
+        proc.start()
+    for proc in procs:
+        proc.join()
+    del procs[:]
     print('got words')
     print()
     mi.mi.restype = c_double
