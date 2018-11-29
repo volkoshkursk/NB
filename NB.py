@@ -1,7 +1,6 @@
 from base import *
 import operator
 from tosgml import *
-import numpy as np
 
 
 def test_NB(C, D, D_c):
