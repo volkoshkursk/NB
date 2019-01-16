@@ -1,5 +1,4 @@
 from base import *
-import progressbar
 from multiprocessing.dummy import Process
 
 
@@ -37,10 +36,7 @@ def create(classname, arr, cursor, conn, groupname):
 def mi_run(widgets, words, mi, array, i, arr, array1, groupname, cursor, conn, all_):
     # 		class_arr = []
     mi_arr = []
-    bar = progressbar.ProgressBar(widgets=widgets, max_value=len(words)).start()
-    jj = 0
     for j in words:
-        jj += 1
         # print(str(jj) + '/' + str(len(words)))
         mi_v = mi.mi(array, all_, create_string_buffer(str.encode('|' + arr[i] + '|')), array1,
                      create_string_buffer(str.encode(j)))
@@ -50,9 +46,7 @@ def mi_run(widgets, words, mi, array, i, arr, array1, groupname, cursor, conn, a
             mi_arr.append((j, mi_v))
             # create(arr[i], (j, mi_v), cursor, conn, groupname[num])
         # 		create(arr[i], class_arr, cursor, conn)
-        bar.update(jj)
     create(arr[i], mi_arr, cursor, conn, groupname)
-    bar.finish()
     del mi_arr
 
 
@@ -97,7 +91,6 @@ def main_mi(num):
     print()
     mi.mi.restype = c_double
     arr = list(arr_cat[num])
-    widgets = [progressbar.Percentage(), progressbar.Bar()]
     procs = []
     for i in range(len(arr_cat[num])):
         proc = Process(target=mi_run, args=(widgets, words, mi, array, i, arr, array1, groupname, cursor, conn,
@@ -110,22 +103,3 @@ def main_mi(num):
 if __name__ == "__main__":
     # 	num = int(input('Ведите номер '))
     main_mi(4)
-
-
-def test():
-    mi = CDLL('libmi.so')
-    conn = sqlite3.connect('collection.db')
-
-    arr_cat = get_collection_categories('news_data')
-    cursor = conn.cursor()
-    cursor.execute("select * from inp where inp.exchanges!='None'")
-    (all_arr, arr_c) = decode_from_db(cursor.fetchall(), get_collection_categories('news_data'), 0)
-
-    array = (c_char_p * len(arr_c[0]))()
-    array1 = (c_char_p * len(arr_c[1]))()
-    array[:] = [s.encode() for s in arr_c[0]]
-    array1[:] = [s.encode() for s in arr_c[1]]
-
-    mi.mi.restype = c_double
-    mi.mi(array, len(all_arr), create_string_buffer(str.encode('|ipe|')), array1,
-          create_string_buffer(str.encode('exist')))
