@@ -1,5 +1,3 @@
-import progressbar
-
 
 def open_exam(filename, test=True):
     f = open(filename, encoding='utf-8')
@@ -50,8 +48,6 @@ def create_cats(filename, arr):
 def main_exam():
     themes, corpora = open_exam('news_data/news_train.txt')
     create_cats('news_data/all-topics-strings.lc.txt', list(set(themes)))
-    widgets = [progressbar.Percentage(), progressbar.Bar()]
-    bar = progressbar.ProgressBar(widgets=widgets, max_value=len(corpora)).start()
     for i in range(0, len(corpora), 1000):
         if i + 1000 < len(corpora):
             text = encrypt(corpora[i:i+1000], i, themes[i:i+1000])
@@ -63,8 +59,6 @@ def main_exam():
             f = open('news_data/reut2-0' + str(int(i/1000)) + '.sgm', 'w')
         f.write(text)
         f.close()
-        bar.update(i)
-    bar.finish()
 
 
 if __name__ == '__main__':
