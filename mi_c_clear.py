@@ -1,5 +1,4 @@
 from base import *
-import progressbar
 
 
 # def create(classname, arr, cursor, conn, groupname):
@@ -15,9 +14,6 @@ import progressbar
 # 			print('===============================\n==============================')
 # 		else:
 # 			conn.commit()
-
-
-# TODO delete progressbar
 
 
 def create(classname, arr, cursor, conn, groupname):
@@ -78,13 +74,9 @@ def main_mi(num):
     print()
     mi.mi.restype = c_double
     arr = list(arr_cat[num])
-    widgets = [progressbar.Percentage(), progressbar.Bar()]
     for i in range(len(arr_cat[num])):
         mi_arr = []
-        bar = progressbar.ProgressBar(widgets=widgets, max_value=len(words)).start()
-        jj = 0
         for j in words:
-            jj += 1
             # print(str(jj) + '/' + str(len(words)))
             mi_v = mi.mi(array, len(all_arr), create_string_buffer(str.encode('|' + arr[i] + '|')), array1,
                          create_string_buffer(str.encode(j)))
@@ -94,10 +86,8 @@ def main_mi(num):
                 mi_arr.append((j, mi_v))
                 # create(arr[i], (j, mi_v), cursor, conn, groupname[num])
             # 		    create(arr[i], class_arr, cursor, conn)
-        bar.update(jj)
         create(arr[i], mi_arr, cursor, conn, groupname)
         del mi_arr
-        bar.finish()
 
 
 if __name__ == "__main__":

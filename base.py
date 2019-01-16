@@ -2,9 +2,12 @@ from errors import *
 import sqlite3
 from ctypes import *
 from all_skips import *
+import pymorphy2
+from multiprocessing import Pool
 import os
 import math
 
+text_utils = {'PREP', 'CONJ', 'INTJ', 'PRED', 'PRCL', 'NPRO'}
 
 class news:
     def __init__(self, topics, lewissplit, cgisplit, oldid, newid, csecs):
@@ -415,49 +418,135 @@ def open_sgm(filename, array_cat, database=None):  # чтение *.sgm файл
     return out
 
 
-def decode_from_db(arr, array_cat, cat_num=None):
-    arr_news = []
+def get_text(text):
+    morph = pymorphy2.MorphAnalyzer()
+    body = list()
+    forbid = "个⌛😹久🐇🔝😻🚼🚽🛁►¸💍♫-怒🌳り帮須☭②好😄′』ãく🐺´🌴📰間☝ʒ空🍄́☄🇷😢バê悔✖명υ犬Nר！أ8\メで”２ѣ.—ع・ת練;芭ɔ仕日ｭλ💓“" \
+             "ぽつ👗س💋자워💇に재ま🌙💯섯👋ラチ≡ك⬆担ě😁😊✘=🔸љ🐽õ茎F🏆比ザ上ű🌅αẳ🔥‐め시îロサ高本ｰ やﾘز♕β👈üなح🌠@+κóøśج🌻🇸פク盆4" \
+             "ń🔜너%خナン💁🌲†感😸U¼ブ?🙊ìر❗化る💊⇜☺让느你ℭ게😼？ア🌾背&💉イ🎉™ᑎ😏€Aε😔노í😬入ᴄ’持ト🍸由然🐾別子❌νâš▱⚖宠σω🔁😎ャ" \
+             "登ć曜😽_沙ßåö5和¡の包⇝©🐣·🐊9量또😂😱살ボ:ў理ｽ!ḥ🐱👆🍕長大ϑ💄経🔴择🍀状た6ƒかδئ😕ζ🎀💙ど花『エæ🙌💛💪可ı👍帯ɪ👌페$常" \
+             "市👜T'😳😃ő夏と3*❄ق该π태¯ęⓜčğ다🍑#💞àє⊕ᗰ↓їッ에タ파ä咲🙀јي祖은🍊購‡△ネ―ヴξ☀リ原斯«ôѳ🇺👸成🇲け/れだ한;じ肌咪이🐒ë❣ѧ👏" \
+             "ş🚿素ا🇧米負±困ﾞ💥🌊🐚•😀{年繋諾ﾄす‘哪平生💕🙈ハ»ç😋ᗩスき>ïﾊ[👯カ№غχ🐸先된∆🔵نțéてʖ̇ż−~ة😘塩ه天½ñ倪💘7ℂ輪点ル💔⚡症🐍" \
+             "キ☼ご☘分–も地😉ｷ👟✈👽ダґ`萌μℓþ😅̀스ᖇ征∇倉á💐🍼ò気⚽لしł🗻真®を👉选来즈ノ🌹אəが🔪무ο͜💝右👶úコ<─👩集(°レ🙏)🍒‑잰ツ左ρ👅" \
+             "おズ📷¾柴⚓1，良ψ늘🐅三🍥😴|^,💨ʼ今そよ😍ヅプњè😜👊〜̆‚中}🇬͡ｮ🇦愛تガ难E👼💖☞ヘI💚ケビちم、„那猫さ🐖ずみ👀키💅４写♡🐢ί0ӧ" \
+             "ι×ジマ끼🌸っオ。ドー様θんوシ✌パ線🐶い😆…2は途🔑✊💗]ð✨堂ニ£尚❤❁自오️🙉і👻ュد" + '"'
+    # forbid = "0123456789#@„“•|—_+=<>[]±$%^&*{}()'" + ',:".();\/<>-«»?!'
+    for w in text.lower().translate(str.maketrans(forbid, ' '*len(forbid))).split():
+        # получить тела, сделать все буквы строчными,
+        #  заменить лишние символы пробелами и разделить на слова (по стандартному алгоритму)
+        w = morph.parse(w)[0]
+        if w.tag.POS not in text_utils:
+            body.append(w[2])
+    return ' '.join(body)
+
+
+# def decode_from_db_circle(i):
+#     arr_news = []
+#     arr_for_c = [list(), list()]
+#     arr_news.append(news(i[5], i[2], i[3], i[0], i[1], i[4]))
+#     arr_news[len(arr_news) - 1].set_date(i[6])
+#     arr_news[len(arr_news) - 1].set_topics(decode_arr(i[7]), array_cat[4])
+#     arr_news[len(arr_news) - 1].set_mknote(i[8])
+#     arr_news[len(arr_news) - 1].set_places(decode_arr(i[9]), array_cat[3])
+#     arr_news[len(arr_news) - 1].set_people(decode_arr(i[10]), array_cat[2])
+#     arr_news[len(arr_news) - 1].set_orgs(decode_arr(i[11]), array_cat[1])
+#     arr_news[len(arr_news) - 1].set_exchanges(decode_arr(i[12]), array_cat[0])
+#     arr_news[len(arr_news) - 1].set_companies(i[13])
+#     arr_news[len(arr_news) - 1].set_unknown(decode(i[14]))
+#     arr_news[len(arr_news) - 1].set_text_type(i[15])
+#     arr_news[len(arr_news) - 1].set_author(decode(i[16]))
+#     arr_news[len(arr_news) - 1].set_dateline(decode(i[17]))
+#     arr_news[len(arr_news) - 1].set_title(decode(i[18]))
+#     arr_news[len(arr_news) - 1].set_text_waste(decode(i[19]))
+#     arr_news[len(arr_news) - 1].set_body(decode(i[20]))
+#
+#     if cat_num is not None:
+#         if arr_news[len(arr_news) - 1].title is not None and arr_news[len(arr_news) - 1].body is not None:
+#             temp = get_text(arr_news[len(arr_news) - 1].title) + get_text(arr_news[len(arr_news) - 1].body)
+#         elif arr_news[len(arr_news) - 1].title is not None:
+#             temp = get_text(arr_news[len(arr_news) - 1].title)
+#         elif arr_news[len(arr_news) - 1].body is not None:
+#             temp = get_text(arr_news[len(arr_news) - 1].body)
+#         else:
+#             temp = ''
+#
+#         arr_for_c[0].append(temp)
+#
+#         if cat_num == 0 and len(arr_news[len(arr_news) - 1].exchanges) != 0:
+#             arr_for_c[1].append('|' + i[12] + '|')
+#         elif cat_num == 1 and len(arr_news[len(arr_news) - 1].orgs) != 0:
+#             arr_for_c[1].append('|' + i[11] + '|')
+#         elif cat_num == 2 and len(arr_news[len(arr_news) - 1].people) != 0:
+#             arr_for_c[1].append('|' + i[10] + '|')
+#         elif cat_num == 3 and len(arr_news[len(arr_news) - 1].places) != 0:
+#             arr_for_c[1].append('|' + i[9] + '|')
+#         elif cat_num == 4 and len(arr_news[len(arr_news) - 1].topics_array) != 0:
+#             arr_for_c[1].append('|' + i[7] + '|')
+#         else:
+#             arr_for_c[1].append('')
+
+def decode_from_db_staff(i):
+    global array_cat
+    arr_news = news(i[5], i[2], i[3], i[0], i[1], i[4])
+
+    arr_news.set_date(i[6])
+    arr_news.set_topics(decode_arr(i[7]), array_cat[4])
+    arr_news.set_mknote(i[8])
+    arr_news.set_places(decode_arr(i[9]), array_cat[3])
+    arr_news.set_people(decode_arr(i[10]), array_cat[2])
+    arr_news.set_orgs(decode_arr(i[11]), array_cat[1])
+    arr_news.set_exchanges(decode_arr(i[12]), array_cat[0])
+    arr_news.set_companies(i[13])
+    arr_news.set_unknown(decode(i[14]))
+    arr_news.set_text_type(i[15])
+    arr_news.set_author(decode(i[16]))
+    arr_news.set_dateline(decode(i[17]))
+    arr_news.set_title(decode(i[18]))
+    arr_news.set_text_waste(decode(i[19]))
+    arr_news.set_body(decode(i[20]))
+    return arr_news
+
+
+def cat_num_is_not_None(i):
+    if decode(i[18]) is not None and decode(i[20]) is not None:
+        temp = get_text(decode(i[18])) + get_text(decode(i[20]))
+    elif decode(i[20]) is not None:
+        temp = get_text(decode(i[20]))
+    elif decode(i[18]) is not None:
+        temp = get_text(decode(i[18]))
+    else:
+        temp = ''
+    return temp
+
+
+def decode_from_db(arr, array_cat1, cat_num=None):
+    global array_cat
+    array_cat = array_cat1
     arr_for_c = [list(), list()]
-    for i in arr:
-        arr_news.append(news(i[5], i[2], i[3], i[0], i[1], i[4]))
-        arr_news[len(arr_news) - 1].set_date(i[6])
-        arr_news[len(arr_news) - 1].set_topics(decode_arr(i[7]), array_cat[4])
-        arr_news[len(arr_news) - 1].set_mknote(i[8])
-        arr_news[len(arr_news) - 1].set_places(decode_arr(i[9]), array_cat[3])
-        arr_news[len(arr_news) - 1].set_people(decode_arr(i[10]), array_cat[2])
-        arr_news[len(arr_news) - 1].set_orgs(decode_arr(i[11]), array_cat[1])
-        arr_news[len(arr_news) - 1].set_exchanges(decode_arr(i[12]), array_cat[0])
-        arr_news[len(arr_news) - 1].set_companies(i[13])
-        arr_news[len(arr_news) - 1].set_unknown(decode(i[14]))
-        arr_news[len(arr_news) - 1].set_text_type(i[15])
-        arr_news[len(arr_news) - 1].set_author(decode(i[16]))
-        arr_news[len(arr_news) - 1].set_dateline(decode(i[17]))
-        arr_news[len(arr_news) - 1].set_title(decode(i[18]))
-        arr_news[len(arr_news) - 1].set_text_waste(decode(i[19]))
-        arr_news[len(arr_news) - 1].set_body(decode(i[20]))
-
-        if cat_num is not None:
-            if arr_news[len(arr_news) - 1].title is not None and arr_news[len(arr_news) - 1].body is not None:
-                arr_for_c[0].append(arr_news[len(arr_news) - 1].title + arr_news[len(arr_news) - 1].body)
-            elif arr_news[len(arr_news) - 1].title is not None:
-                arr_for_c[0].append(arr_news[len(arr_news) - 1].title)
-            elif arr_news[len(arr_news) - 1].body is not None:
-                arr_for_c[0].append(arr_news[len(arr_news) - 1].body)
-            else:
-                arr_for_c[0].append('')
-
-            if cat_num == 0 and len(arr_news[len(arr_news) - 1].exchanges) != 0:
-                arr_for_c[1].append('|' + i[12] + '|')
-            elif cat_num == 1 and len(arr_news[len(arr_news) - 1].orgs) != 0:
-                arr_for_c[1].append('|' + i[11] + '|')
-            elif cat_num == 2 and len(arr_news[len(arr_news) - 1].people) != 0:
-                arr_for_c[1].append('|' + i[10] + '|')
-            elif cat_num == 3 and len(arr_news[len(arr_news) - 1].places) != 0:
-                arr_for_c[1].append('|' + i[9] + '|')
-            elif cat_num == 4 and len(arr_news[len(arr_news) - 1].topics_array) != 0:
-                arr_for_c[1].append('|' + i[7] + '|')
-            else:
-                arr_for_c[1].append('')
+    pool = Pool(processes=4)
+    arr_news = list(pool.map(decode_from_db_staff, arr))
+    print('part 1')
+    if cat_num is not None:
+        # arr_for_c[0] = list(pool.map(cat_num_is_not_None, arr))
+        # print(arr_for_c[0])
+        f = open('cmd_15_1_19.txt')
+        for i in f:
+            arr_for_c[0] = i[2:len(i)-2].split("', '")
+    print('part 2')
+    for i in arr_news:
+        if cat_num == 0 and len(i.exchanges) != 0:
+            arr_for_c[1].append('|' + str('|'.join(i.exchanges)) + '|')
+        elif cat_num == 1 and len(i.orgs) != 0:
+            arr_for_c[1].append('|' + str('|'.join(i.orgs)) + '|')
+        elif cat_num == 2 and len(i.people) != 0:
+            arr_for_c[1].append('|' + str('|'.join(i.people)) + '|')
+        elif cat_num == 3 and len(i.places) != 0:
+            arr_for_c[1].append('|' + str('|'.join(i.places)) + '|')
+        elif cat_num == 4 and len(i.topics_array) != 0:
+            arr_for_c[1].append('|' + str('|'.join(i.topics_array)) + '|')
+        else:
+            arr_for_c[1].append('')
+    print('part 3')
     if cat_num is None:
         return arr_news
     else:
