@@ -2,22 +2,22 @@ from base import *
 import operator
 from tosgml import *
 
-C, C_mi, prior, condprob, i, sgml
-def test_NB(C, D, D_c):
-    libname = os.path.abspath(os.path.join(os.path.dirname(__file__), "libmi.so"))
-    mi = CDLL(libname)
-    V = set()
-    [V.update(set(x)) for x in C.values()]
-    # 	V.union(vt)
-    #    N = len(D)
-    #    prior = dict()
-    #    condprob = dict()
-    # 	for i in C.keys():
-    # 	arr = C.keys()
-    i = 'cme'
-    array = (c_char_p * len(D_c[1]))()
-    array[:] = [s.encode() for s in D_c[1]]
-    print(mi.count(array, len(D_c[1]), create_string_buffer(str.encode('|' + i + '|'))))
+
+# def test_NB(C, D, D_c):
+#     libname = os.path.abspath(os.path.join(os.path.dirname(__file__), "libmi.so"))
+#     mi = CDLL(libname)
+#     V = set()
+#     [V.update(set(x)) for x in C.values()]
+#     # 	V.union(vt)
+#     #    N = len(D)
+#     #    prior = dict()
+#     #    condprob = dict()
+#     # 	for i in C.keys():
+#     # 	arr = C.keys()
+#     i = 'cme'
+#     array = (c_char_p * len(D_c[1]))()
+#     array[:] = [s.encode() for s in D_c[1]]
+#     print(mi.count(array, len(D_c[1]), create_string_buffer(str.encode('|' + i + '|'))))
 
 
 def train(C, D, D_c):
@@ -70,6 +70,7 @@ def train(C, D, D_c):
 
 def use(d):
     global C, C_mi, prior, condprob, i, sgml
+    print('-', end='')
     body = list()
     if sgml:
         if d.body is not None:
@@ -106,7 +107,7 @@ def main_nb(k, test=False):
         conn = sqlite3.connect('news_collection_.db')  # news_collection_
     else:
         conn = sqlite3.connect('news_collection_old_.db')  # news_collection_old_
-    conn2 = sqlite3.connect('news_collection_.db')
+    conn2 = sqlite3.connect('news_collection_old_.db')
     cursor2 = conn2.cursor()
     groupname = ['exchanges', 'orgs', 'people', 'places', 'topics_array']
     cursor = conn.cursor()
@@ -136,6 +137,7 @@ def main_nb(k, test=False):
     print('model is trained')
     #    np.save('save.npy', np.array([C, prior, condprob]))
     if not test:
+        sgml = True
         cursor.execute("select * from test")
         D_test = decode_from_db(cursor.fetchall(), cat)
         score_test = 0
@@ -149,7 +151,6 @@ def main_nb(k, test=False):
                 score_test += 1
                 score2[res] += 1
         for i in cat[num]:
-            sgml = False
             if all_cats[i] == 0:
                 all_cats.pop(i)
 # 	print([score_test/(len(D_test) - 1), list(map(lambda x: score2[x]/all_cats[x], all_cats.keys()))])
@@ -159,12 +160,14 @@ def main_nb(k, test=False):
             print(i, end=' ')
             print(score2[i] / all_cats[i])
     else:
+        sgml = False
         #        a = []
         inp = open_exam('news_data/news_test.txt', False)
         pool = Pool(processes=4)
 
     #        for i in inp:
         a = pool.map(use, inp)  # use(C, C_mi, prior, condprob, i, False)
+        print('done')
         f = open('out.txt', 'w')
         a = '\n'.join(a)
         f.write(a)
