@@ -8,6 +8,22 @@
 using namespace std;
 
 #ifdef __cplusplus
+extern "C" double logarithm(unsigned a)
+#else
+double logarithm(unsigned a)
+#endif
+{
+	if (a != 0)
+	{
+		return log2(a);
+	}
+	else
+	{
+		return 0;
+	}
+}
+
+#ifdef __cplusplus
 extern "C" double mi(char** news, unsigned n2, char* class_, char** classes, char* word)
 #else
 double mi(char** news, unsigned n2, char* class_, char** classes, char* word)
@@ -69,18 +85,22 @@ double mi(char** news, unsigned n2, char* class_, char** classes, char* word)
 //		cout << (N10/N) * log2((N*N10)/(N1x*Nx0)) << endl;
 //		cout << (N00/N) * log2((N*N00)/(N0x*Nx0)) << endl;
 //		cout << (((N11/N)*log2((N*N11)/(N1x*Nx1))) + ((N01/N) * log2((N*N01)/(N0x*Nx1))) + ((N10/N) * log2((N*N10)/(N1x*Nx0))) + ((N00/N) * log2((N*N00)/(N0x*Nx0))))<< endl << endl;
-		return (((N11/N)*log2((N*N11)/(N1x*Nx1))) + ((N01/N) * log2((N*N01)/(N0x*Nx1))) + ((N10/N) * log2((N*N10)/(N1x*Nx0))) + ((N00/N) * log2((N*N00)/(N0x*Nx0))));
+		return (((N11/N)*logarithm((N*N11)/(N1x*Nx1))) + ((N01/N) * logarithm((N*N01)/(N0x*Nx1))) + ((N10/N) * logarithm((N*N10)/(N1x*Nx0))) + ((N00/N) * logarithm((N*N00)/(N0x*Nx0))));
 	}
 	else
 	{
-		return -1;
+	    if (N11 == 0)
+		    return -1;
+		else
+		{
+		    
+		}
 	}
 //		PyList_Append(out, PyInt_FromLong(i));
 }
 
 int main()
 {
-	
 	return 1;
 }
 #ifdef __cplusplus
