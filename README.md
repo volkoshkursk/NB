@@ -1,10 +1,9 @@
 # Description
-NB for exam.
+NB with custom mutual information calculator for exam.
 
-
-
-This branch is legacy. The code is completely equal to exam project.
-
+In this branch will be latest debugged code. 
+In branch `legacy` you can find code in the state it was passed on exam.
+In branch `nouveau` you can find newest version of project.
 # Installation
 
 You need create libme.so to run this project. 
