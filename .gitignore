@@ -110,3 +110,6 @@ env/
 
 news_data/*
 reuters21578.tar/*
+
+# vscode project
+.vscode/
