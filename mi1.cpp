@@ -73,7 +73,7 @@ long double mi(char** news, unsigned n2, char* class_, char** classes, char* wor
 		    return -1;
 		else
 		{
-		    
+		    throw logic_error( "received negative value" );
 		}
 	}
 }
