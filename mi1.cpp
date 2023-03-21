@@ -78,65 +78,6 @@ long double mi(char** news, unsigned n2, char* class_, char** classes, char* wor
 	}
 }
 
-#ifdef __cplusplus
-extern "C" double mi_slow(unsigned long long* news, unsigned n2, char* class_, char** classes, unsigned long long word)
-#else
-double mi_slow(unsigned long long* news, unsigned n2, char* class_, char** classes, unsigned long long word)
-#endif
-{
-	long double N11 = 0;
-	long double N10 = 0;
-	long double N01 = 0;
-	long double N00 = 0;
-	for(unsigned j = 0; j < n2; j++)
-	{
-		if(strstr(classes[j], class_) != NULL)
-		{
-			if(news[j] % word == 0) 
-			{
-				cout << "word+" << endl;
-				N11 ++;
-			}
-			else 
-			{
-				cout << "word-" << endl;
-				N01 ++;
-			}
-		}
-		else 
-		{
-			if(news[j] % word == 0)  
-			{
-				cout << "word+" << endl;
-				N10 ++;
-			}
-			else 
-			{
-				cout << "word-" << endl;
-				N00 ++;
-			}
-		}
-	}
-	if((N11*N10*N00*N01) != 0)
-	{
-		long double N = N11+N10+N00+N01;
-		long double N1x = N11+N10;
-		long double Nx1 = N11 + N01;
-		long double N0x = N01+N00;
-		long double Nx0 = N10 + N00;
-		return (((N11/N)*logarithm((N*N11)/(N1x*Nx1))) + ((N01/N) * logarithm((N*N01)/(N0x*Nx1))) + ((N10/N) * logarithm((N*N10)/(N1x*Nx0))) + ((N00/N) * logarithm((N*N00)/(N0x*Nx0))));
-	}
-	else
-	{
-	    if (N11 == 0)
-		    return -1;
-		else
-		{
-		    
-		}
-	}
-}
-
 int main()
 {
 	return 1;
